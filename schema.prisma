@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  SCHOOL
+}
+enum IdCardStatus {
+  DRAFT
+  APPROVED
+  PRINTED
+}
+enum SchoolStatus {
+  PENDING
+  ACTIVE
+  REJECTED
+}
+enum ClientType {
+  SCHOOL
+  WEDDING
+  BUSINESS
+  OTHER
+}
+enum OrderStatus {
+  NEW
+  IN_PROGRESS
+  READY
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id String @id @default(cuid())
+  username String @unique
+  passwordHash String
+  recoveryCodeHash String?
+  role Role
+  schoolId String?
+  school School? @relation(fields: [schoolId], references: [id])
+  createdAt DateTime @default(now())
+}
+model School {
+  id String @id @default(cuid())
+  name String
+  address String?
+  phone String?
+  status SchoolStatus @default(PENDING)
+  users User[]
+  idCards IdCard[]
+  createdAt DateTime @default(now())
+}
+model Design {
+  id String @id @default(cuid())
+  name String
+  previewUrl String?
+  rate Int @default(0)
+  active Boolean @default(true)
+  idCards IdCard[]
+  createdAt DateTime @default(now())
+}
+model IdCard {
+  id String @id @default(cuid())
+  schoolId String
+  studentName String
+  fatherName String?
+  className String?
+  section String?
+  rollNo String?
+  dob String?
+  photoUrl String?
+  designId String?
+  status IdCardStatus @default(DRAFT)
+  createdAt DateTime @default(now())
+  school School @relation(fields: [schoolId], references: [id])
+  design Design? @relation(fields: [designId], references: [id])
+}
+model Client {
+  id String @id @default(cuid())
+  name String
+  phone String?
+  email String?
+  type ClientType @default(OTHER)
+  address String?
+  notes String?
+  orders Order[]
+  createdAt DateTime @default(now())
+}
+model Order {
+  id String @id @default(cuid())
+  clientId String
+  serviceName String
+  quantity Int @default(1)
+  amount Int @default(0)
+  status OrderStatus @default(NEW)
+  notes String?
+  client Client @relation(fields: [clientId], references: [id])
+  createdAt DateTime @default(now())
+}
+model AppSetting {
+  id String @id @default(cuid())
+  key String @unique
+  value String?
+  updatedAt DateTime @updatedAt
+}
